@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Passagens Aéreas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .result {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .result h3 {
+            margin: 0;
+        }
+
+        .result p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Busca de Passagens Aéreas</h1>
+    <form id="search-form">
+        <label for="origin">Origem:</label>
+        <input type="text" id="origin" name="origin" required><br>
+        <label for="destination">Destino:</label>
+        <input type="text" id="destination" name="destination" required><br>
+        <label for="departure_date">Data de Partida:</label>
+        <input type="date" id="departure_date" name="departure_date" required><br>
+        <label for="return_date">Data de Retorno:</label>
+        <input type="date" id="return_date" name="return_date"><br>
+        <label for="adults">Passageiros Adultos:</label>
+        <input type="number" id="adults" name="adults" required><br>
+        <button type="submit">Buscar</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const departure_date = document.getElementById('departure_date').value;
+            const return_date = document.getElementById('return_date').value;
+            const adults = document.getElementById('adults').value;
+
+            fetch('/search-flights', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    origin: origin,
+                    destination: destination,
+                    departure_date: departure_date,
+                    return_date: return_date,
+                    adults: adults
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '';
+                    if (Array.isArray(data)) {
+                        data.forEach(offer => {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.className = 'result';
+                            resultDiv.innerHTML = `
+                            <h3>Companhia: ${offer.airline}</h3>
+                            <p><strong>Preço:</strong> $${offer.price}</p>
+                            <p><strong>Origem:</strong> ${offer.origin}</p>
+                            <p><strong>Destino:</strong> ${offer.destination}</p>
+                            <p><strong>Partida:</strong> ${new Date(offer.departure_time).toLocaleString()}</p>
+                            <p><strong>Chegada:</strong> ${new Date(offer.arrival_time).toLocaleString()}</p>
+                        `;
+                            resultsDiv.appendChild(resultDiv);
+                        });
+                    } else {
+                        resultsDiv.innerHTML = `<p>${data.error}</p>`;
+                    }
+                })
+                .catch(error => console.error('Erro:', error));
+        });
+    </script>
+</body>
+
+</html>
